@@ -33,13 +33,60 @@ public class EigenFaceTest {
 		img_new = arrayToMatrix(arr, img_new);
 		img_new.convertTo(img_new, 0);
 		Imgcodecs.imwrite("C:\\Users\\Harshal\\Desktop\\CSYE6205\\storage\\mean.jpg", img_new);
-		for(int i = 0 ; i < files.length; i ++){
-			Mat image = Imgcodecs.imread(location+"\\"+files[i]);
-			Imgproc.resize(image, image, new Size(200, 200));
-			Imgproc.cvtColor(image, image, Imgproc.COLOR_BGR2GRAY);
-			Core.subtract(image, img_new, image);
-			Imgcodecs.imwrite("C:\\Users\\Harshal\\Desktop\\CSYE6205\\storage\\mean_"+i+".jpg", image);
+		subtractMeanFromEigenMatrix(arr);
+		int cov[][] = covarianceMatrixFor(eigenMatrix);
+		printMtx(cov);
+		int eigenFace[][] = eigenMatrix; 
+		for(int i = 0 ; i < eigenMatrix.length; i++){
+			for(int j = 0; j < cov.length; j++){
+				int temp = 0;
+				for(int k = 0 ; k < cov[j].length; k++){
+					eigenFace[i][j] += eigenMatrix[i][k]*cov[k][j];
+					temp += cov[k][j];
+				}
+				eigenFace[i][j] /= temp; 
+			}
 		}
+//		for(int i = 0 ; i < files.length; i ++){
+//			Mat image = Imgcodecs.imread(location+"\\"+files[i]);
+//			Imgproc.resize(image, image, new Size(200, 200));
+//			Imgproc.cvtColor(image, image, Imgproc.COLOR_BGR2GRAY);
+//			Core.subtract(image, img_new, image);
+//			Imgcodecs.imwrite("C:\\Users\\Harshal\\Desktop\\CSYE6205\\storage\\mean_"+i+".jpg", image);
+//		}
+		
+	}
+	
+	private void printMtx(int A[][]){
+		for(int i = 0 ; i < A.length; i ++){
+			for(int j = 0 ; j < A[i].length; j ++){
+				System.out.print(" "+A[i][j]);
+			}
+			System.out.println("");
+		}
+	}
+	
+	private int[][] covarianceMatrixFor(int A[][]){
+		int C[][] = new int[A[0].length][A[0].length];
+		int AT[][] = transposeOf(A);
+		for(int i = 0 ; i < C.length; i ++){
+			for(int j = 0 ; j < C.length; j ++){
+				for(int k = 0 ; k < A.length; k ++){
+					C[i][j] += AT[i][k]*A[k][j];
+				}
+			}
+		}
+		return C;
+	}
+	
+	private int[][] transposeOf(int mtx[][]){
+		int C[][] = new int[mtx[0].length][mtx.length];
+		for(int i = 0 ; i < mtx.length; i ++){
+			for(int j = 0 ; j < mtx[i].length; j ++){
+				C[j][i] = mtx[i][j];
+			}
+		}
+		return C;
 	}
 	
 	private void addImageToEigenMatrix(Mat img, int index){
@@ -48,6 +95,30 @@ public class EigenFaceTest {
 				eigenMatrix[i*(int)(img.size().width) + j][index] = (int)img.get(i, j)[0];
 			}
 		}
+	}
+	
+	private void subtractMeanFromEigenMatrix(int arr[]){
+		
+		for(int i = 0 ; i < eigenMatrix.length; i++){
+			for(int j = 0 ; j < eigenMatrix[i].length; j++){
+				eigenMatrix[i][j] = eigenMatrix[i][j] - arr[i];
+				if(eigenMatrix[i][j] < 0){
+					eigenMatrix[i][j] = 0;
+				}
+			}
+		}
+	}
+	
+	private int[] vectorizeMat(Mat image){
+		int arr[] = new int[(int)image.size().height*(int)image.size().width];
+		int count = 0;
+		for(int i = 0 ; i < image.size().height; i++){
+			for(int j = 0 ; j < image.size().width; j++){
+				arr[count] = (int)image.get(i, j)[0];
+				count++;
+			}
+		}
+		return arr;
 	}
 	
 	private Mat arrayToMatrix(int arr[], Mat img){
@@ -65,6 +136,7 @@ public class EigenFaceTest {
 		int arr[] = new int[eigenMtx.length*eigenMtx[0].length];
 		int index = 0;
 		for(int i = 0 ; i < eigenMtx.length; i++){
+			arr[index] = 0;
 			for(int j = 0 ; j < eigenMtx[i].length; j++){
 				arr[index] += eigenMtx[i][j]; 
 			}
