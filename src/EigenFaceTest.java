@@ -5,6 +5,7 @@ import java.io.FileReader;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
@@ -35,7 +36,17 @@ public class EigenFaceTest {
 		Imgcodecs.imwrite("C:\\Users\\Harshal\\Desktop\\CSYE6205\\storage\\mean.jpg", img_new);
 		subtractMeanFromEigenMatrix(arr);
 		int cov[][] = covarianceMatrixFor(eigenMatrix);
+		Mat vec = new Mat();
+		Mat val = new Mat();
+		Mat covMat = new Mat(new Size(cov[0].length, cov.length), CvType.CV_32S); 
+		covMat = D2arrayToMatrix(cov, covMat);
+		covMat.convertTo(covMat, CvType.CV_32F);
+		Core.eigen(covMat, vec, val);
 		printMtx(cov);
+		System.out.println(vec.size().height+" "+vec.size().width);
+		System.out.println(val.size().height+" "+val.size().width);
+		printMat(val);
+		printMat(vec);
 		int eigenFace[][] = eigenMatrix; 
 		for(int i = 0 ; i < eigenMatrix.length; i++){
 			for(int j = 0; j < cov.length; j++){
@@ -61,6 +72,15 @@ public class EigenFaceTest {
 		for(int i = 0 ; i < A.length; i ++){
 			for(int j = 0 ; j < A[i].length; j ++){
 				System.out.print(" "+A[i][j]);
+			}
+			System.out.println("");
+		}
+	}
+	
+	private void printMat(Mat A){
+		for(int i = 0 ; i < A.size().height; i ++){
+			for(int j = 0 ; j < A.size().width; j ++){
+				System.out.print(" "+A.get(i, j)[0]);
 			}
 			System.out.println("");
 		}
@@ -126,6 +146,17 @@ public class EigenFaceTest {
 			for(int j = 0 ; j < img.size().width; j++){
 				int data[] = new int[1];
 				data[0] = (int)arr[i*(int)img.size().width + j];
+				img.put(i, j, data);
+			}
+		}
+		return img;
+	}
+	
+	private Mat D2arrayToMatrix(int arr[][], Mat img){
+		for(int i = 0 ; i < img.size().height; i++){
+			for(int j = 0 ; j < img.size().width; j++){
+				int data[] = new int[1];
+				data[0] = (int)arr[i][j];
 				img.put(i, j, data);
 			}
 		}
